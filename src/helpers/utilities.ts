@@ -1,94 +1,94 @@
-import { IChainData } from './types'
-import supportedChains from './chains'
-import { convertHexToNumber } from './bignumber'
+import { IChainData } from "./types";
+import supportedChains from "./chains";
+import { convertHexToNumber } from "./bignumber";
 
 export function capitalize(string: string): string {
   return string
-    .split(' ')
+    .split(" ")
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ')
+    .join(" ");
 }
 
 export function ellipseText(
-  text: string = '',
+  text: string = "",
   maxLength: number = 9999
 ): string {
   if (text.length <= maxLength) {
-    return text
+    return text;
   }
-  const _maxLength = maxLength - 3
-  let ellipse = false
-  let currentLength = 0
+  const _maxLength = maxLength - 3;
+  let ellipse = false;
+  let currentLength = 0;
   const result =
     text
-      .split(' ')
+      .split(" ")
       .filter(word => {
-        currentLength += word.length
+        currentLength += word.length;
         if (ellipse || currentLength >= _maxLength) {
-          ellipse = true
-          return false
+          ellipse = true;
+          return false;
         } else {
-          return true
+          return true;
         }
       })
-      .join(' ') + '...'
-  return result
+      .join(" ") + "...";
+  return result;
 }
 
 export function ellipseAddress(
-  address: string = '',
+  address: string = "",
   width: number = 10
 ): string {
-  return `${address.slice(0, width)}...${address.slice(-width)}`
+  return `${address.slice(0, width)}...${address.slice(-width)}`;
 }
 
 export function padLeft(n: string, width: number, z?: string): string {
-  z = z || '0'
-  n = n + ''
-  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n
+  z = z || "0";
+  n = n + "";
+  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
 }
 
 export function sanitizeHex(hex: string): string {
-  hex = hex.substring(0, 2) === '0x' ? hex.substring(2) : hex
-  if (hex === '') {
-    return ''
+  hex = hex.substring(0, 2) === "0x" ? hex.substring(2) : hex;
+  if (hex === "") {
+    return "";
   }
-  hex = hex.length % 2 !== 0 ? '0' + hex : hex
-  return '0x' + hex
+  hex = hex.length % 2 !== 0 ? "0" + hex : hex;
+  return "0x" + hex;
 }
 
 export function addHexPrefix(hex: string): string {
-  if (hex.toLowerCase().substring(0, 2) === '0x') {
-    return hex
+  if (hex.toLowerCase().substring(0, 2) === "0x") {
+    return hex;
   }
-  return '0x' + hex
+  return "0x" + hex;
 }
 
 export function removeHexPrefix(hex: string): string {
-  if (hex.toLowerCase().substring(0, 2) === '0x') {
-    return hex.substring(2)
+  if (hex.toLowerCase().substring(0, 2) === "0x") {
+    return hex.substring(2);
   }
-  return hex
+  return hex;
 }
 
 export function getDataString(func: string, arrVals: any[]): string {
-  let val = ''
+  let val = "";
   for (let i = 0; i < arrVals.length; i++) {
-    val += padLeft(arrVals[i], 64)
+    val += padLeft(arrVals[i], 64);
   }
-  const data = func + val
-  return data
+  const data = func + val;
+  return data;
 }
 
 export function isMobile(): boolean {
-  let mobile: boolean = false
+  let mobile: boolean = false;
 
   function hasTouchEvent(): boolean {
     try {
-      document.createEvent('TouchEvent')
-      return true
+      document.createEvent("TouchEvent");
+      return true;
     } catch (e) {
-      return false
+      return false;
     }
   }
 
@@ -101,65 +101,139 @@ export function isMobile(): boolean {
         navigator.userAgent.substr(0, 4)
       )
     ) {
-      return true
+      return true;
     } else if (hasTouchEvent()) {
-      return true
+      return true;
     }
-    return false
+    return false;
   }
 
-  mobile = hasMobileUserAgent()
+  mobile = hasMobileUserAgent();
 
-  return mobile
+  return mobile;
 }
 
 export function getChainData(chainId: number): IChainData | null {
-  let result = null
+  let result = null;
 
   const chainData = supportedChains.filter(
     (chain: any) => chain.chain_id === chainId
-  )[0]
+  )[0];
 
   if (chainData) {
-    result = chainData
+    result = chainData;
   }
 
-  return result
+  return result;
 }
 
 export function getChainIdFromNetworkId(networkId: number): number | null {
-  let result = null
+  let result = null;
 
   const chainData = supportedChains.filter(
     (chain: any) => chain.network_id === networkId
-  )[0]
+  )[0];
 
   if (chainData) {
-    result = chainData.chain_id
+    result = chainData.chain_id;
   }
 
-  return result
+  return result;
 }
 
 export async function queryChainId(web3: any) {
-  const chainIdRes = await web3.currentProvider.send('eth_chainId', [])
+  const chainIdRes = await web3.currentProvider.send("eth_chainId", []);
 
-  let chainId = convertHexToNumber(sanitizeHex(addHexPrefix(`${chainIdRes}`)))
+  let chainId = convertHexToNumber(sanitizeHex(addHexPrefix(`${chainIdRes}`)));
 
   if (!chainId) {
-    const networkIdRes = await web3.currentProvider.send('net_version', [])
+    const networkIdRes = await web3.currentProvider.send("net_version", []);
 
     const networkId = convertHexToNumber(
       sanitizeHex(addHexPrefix(`${networkIdRes}`))
-    )
+    );
 
     if (networkId) {
-      const _chainId = getChainIdFromNetworkId(networkId)
+      const _chainId = getChainIdFromNetworkId(networkId);
 
       if (_chainId) {
-        chainId = _chainId
+        chainId = _chainId;
       }
     }
   }
-  return chainId
+  return chainId;
+}
+
+export function parseQueryString(queryString: string): any {
+  const result: any = {};
+
+  const pairs = (queryString[0] === "?"
+    ? queryString.substr(1)
+    : queryString
+  ).split("&");
+
+  for (let i = 0; i < pairs.length; i++) {
+    const keyArr: string[] = pairs[i].match(/\w+(?==)/i) || [];
+    const valueArr: string[] = pairs[i].match(/=.+/i) || [];
+    if (keyArr[0]) {
+      result[decodeURIComponent(keyArr[0])] = decodeURIComponent(
+        valueArr[0].substr(1)
+      );
+    }
+  }
+
+  return result;
+}
+
+export function removeQueryString(url: string): string {
+  const pathEnd: number | undefined =
+    url.indexOf("?") !== -1 ? url.indexOf("?") : undefined;
+
+  const result: string =
+    typeof pathEnd !== "undefined" ? url.substring(0, pathEnd) : url;
+
+  return result;
+}
+
+export function getQueryString(url: string): string {
+  const pathEnd: number | undefined =
+    url.indexOf("?") !== -1 ? url.indexOf("?") : undefined;
+
+  const queryString: string =
+    typeof pathEnd !== "undefined" ? url.substr(pathEnd) : "";
+
+  return queryString;
+}
+
+export function appendToQueryString(url: string, newQueryParams: any): string {
+  let result = removeQueryString(url);
+  let queryString = getQueryString(url);
+  let queryParams = parseQueryString(queryString);
+
+  queryParams = { ...queryParams, ...newQueryParams };
+
+  queryString = formatQueryString(queryParams);
+
+  result = result + queryString;
+
+  return result;
+}
+
+export function formatQueryString(queryParams: any): string {
+  let result = "";
+
+  const keys = Object.keys(queryParams);
+
+  if (keys) {
+    keys.forEach((key: string, idx: number) => {
+      const value = queryParams[key];
+      if (idx === 0) {
+        result = `?${key}=${value}`;
+      } else {
+        result = result + `&${key}=${value}`;
+      }
+    });
+  }
+
+  return result;
 }
