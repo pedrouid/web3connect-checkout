@@ -1,53 +1,60 @@
 export interface IAssetData {
-  symbol: string
-  name: string
-  decimals: string
-  contractAddress: string
-  balance?: string
+  symbol: string;
+  name: string;
+  decimals: string;
+  contractAddress: string;
+  balance?: string;
 }
 
 export interface IChainData {
-  name: string
-  short_name: string
-  chain: string
-  network: string
-  chain_id: number
-  network_id: number
-  rpc_url: string
+  name: string;
+  short_name: string;
+  chain: string;
+  network: string;
+  chain_id: number;
+  network_id: number;
+  rpc_url: string;
 }
 
 export interface IGasPrice {
-  time: number
-  price: number
+  time: number;
+  price: number;
 }
 
 export interface IGasPrices {
-  timestamp: number
-  slow: IGasPrice
-  average: IGasPrice
-  fast: IGasPrice
+  timestamp: number;
+  slow: IGasPrice;
+  average: IGasPrice;
+  fast: IGasPrice;
 }
 
 export interface IParsedTx {
-  timestamp: string
-  hash: string
-  from: string
-  to: string
-  nonce: string
-  gasPrice: string
-  gasUsed: string
-  fee: string
-  value: string
-  input: string
-  error: boolean
-  asset: IAssetData
-  operations: ITxOperation[]
+  timestamp: string;
+  hash: string;
+  from: string;
+  to: string;
+  nonce: string;
+  gasPrice: string;
+  gasUsed: string;
+  fee: string;
+  value: string;
+  input: string;
+  error: boolean;
+  asset: IAssetData;
+  operations: ITxOperation[];
 }
 
 export interface ITxOperation {
-  asset: IAssetData
-  value: string
-  from: string
-  to: string
-  functionName: string
+  asset: IAssetData;
+  value: string;
+  from: string;
+  to: string;
+  functionName: string;
+}
+
+export type IPaymentStatus = "pending" | "success" | "failure";
+
+export interface IPayment {
+  status: IPaymentStatus;
+  result: any;
 }

@@ -6,12 +6,14 @@ import Column from "./components/Column";
 import Wrapper from "./components/Wrapper";
 import Header from "./components/Header";
 import Loader from "./components/Loader";
+import PaymentResult from "./components/PaymentResult";
 import {
   queryChainId,
   appendToQueryString,
   parseQueryString
 } from "./helpers/utilities";
 import { formatTransaction } from "./helpers/transaction";
+import { IPayment } from "./helpers/types";
 
 const SLayout = styled.div`
   position: relative;
@@ -62,6 +64,8 @@ interface IAppState {
   chainId: number;
   networkId: number;
   paymentRequest: IPaymentRequest | null;
+  paymentStatus: IPayment | null;
+  errorMsg: string;
 }
 
 const INITIAL_STATE: IAppState = {
@@ -71,7 +75,9 @@ const INITIAL_STATE: IAppState = {
   connected: false,
   chainId: 1,
   networkId: 1,
-  paymentRequest: null
+  paymentRequest: null,
+  paymentStatus: null,
+  errorMsg: ""
 };
 
 let accountInterval: any = null;
@@ -131,33 +137,52 @@ class App extends React.Component<any, any> {
     await this.requestTransaction();
   };
 
+  public clearErrorMessage = () => this.setState({ errorMsg: "" });
+
+  public displayErrorMessage = (errorMsg: string) =>
+    this.setState({ errorMsg });
+
   public requestTransaction = async () => {
     console.log("[requestTransaction]"); // tslint:disable-line
     const { address, paymentRequest, web3 } = this.state;
     if (paymentRequest) {
-      const { currency, amount, to, callbackUrl } = paymentRequest;
-      const from = address;
-      const tx = await formatTransaction(from, to, amount, currency);
-      console.log("[requestTransaction] tx", tx); // tslint:disable-line
+      this.setState({
+        paymentStatus: {
+          status: "pending",
+          result: null
+        }
+      });
       try {
+        const { currency, amount, to } = paymentRequest;
+        const from = address;
+        const tx = await formatTransaction(from, to, amount, currency);
+        console.log("[requestTransaction] tx", tx); // tslint:disable-line
         const txHash = await web3.eth.sendTransaction(tx);
         console.log("[requestTransaction] txHash", txHash); // tslint:disable-line
-        if (typeof window !== "undefined") {
-          window.open(appendToQueryString(callbackUrl, { txHash }));
-        } else {
-          console.error("Window is undefined"); // tslint:disable-line
-        }
+        this.setState({
+          status: "success",
+          result: txHash
+        });
       } catch (error) {
-        console.error(error); // tslint:disable-line
+        this.displayErrorMessage(error.message);
+        this.setState({ status: "failure", result: null });
       }
     } else {
-      console.error("Payment request missing or invalid"); // tslint:disable-line
+      this.displayErrorMessage("Payment request missing or invalid");
     }
   };
 
-  public openCallbackUrl(txHash: string) {
-    if (typeof window !== "undefined") {
-      window.open();
+  public redirectToCallbackUrl() {
+    const { paymentRequest, paymentStatus } = this.state;
+    if (paymentRequest && paymentStatus) {
+      if (typeof window !== "undefined") {
+        const url = appendToQueryString(paymentRequest.callbackUrl, {
+          txHash: paymentStatus.result
+        });
+        window.open(url);
+      } else {
+        this.displayErrorMessage("Window is undefined");
+      }
     }
   }
 
@@ -197,7 +222,8 @@ class App extends React.Component<any, any> {
       connected,
       address,
       chainId,
-      paymentRequest
+      paymentRequest,
+      paymentStatus
     } = this.state;
     return (
       <SLayout>
@@ -225,7 +251,7 @@ class App extends React.Component<any, any> {
                 <h3>{`Payment Request`}</h3>
 
                 <p>{`Paying ${paymentRequest.amount} ${paymentRequest.currency}`}</p>
-                {!connected ? (
+                {!paymentStatus ? (
                   <Web3Connect.Button
                     label="Pay"
                     providerOptions={{
@@ -240,7 +266,7 @@ class App extends React.Component<any, any> {
                     onConnect={(provider: any) => this.onConnect(provider)}
                   />
                 ) : (
-                  <p>{`Awaiting payment`}</p>
+                  <PaymentResult height={300} payment={paymentStatus} />
                 )}
               </SLanding>
             )}

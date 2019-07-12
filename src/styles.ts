@@ -1,18 +1,24 @@
 export const colors = {
   white: "255, 255, 255",
   black: "0, 0, 0",
-  dark: "12, 12, 13",
-  grey: "169, 169, 188",
+  dark: "45, 42, 42",
   darkGrey: "113, 119, 138",
-  lightGrey: "212, 212, 212",
+  grey: "155, 177, 187",
+  grey45: "115, 115, 115",
+  grey90: "230, 230, 230",
+  lightGrey: "234, 235, 238",
   blue: "101, 127, 230",
-  lightBlue: "64, 153, 255",
+  lightBlue: "82, 210, 255",
+  darkBlue: "16, 28, 56",
   yellow: "250, 188, 45",
+  yellow45: "230, 164, 0",
   orange: "246, 133, 27",
-  green: "84, 209, 146",
+  green: "83, 205, 106",
+  green35: "15, 163, 127",
   pink: "255, 51, 102",
   red: "214, 75, 71",
-  purple: "110, 107, 233"
+  purple: "110, 107, 233",
+  background: "40, 44, 52"
 };
 
 export const fonts = {

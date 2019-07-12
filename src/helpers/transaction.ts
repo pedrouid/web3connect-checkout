@@ -3,7 +3,6 @@ import {
   convertAmountToRawNumber,
   multiply,
   add,
-  greaterThanOrEqual,
   smallerThan
 } from "../helpers/bignumber";
 import {

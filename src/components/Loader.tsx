@@ -1,75 +1,75 @@
-import * as React from 'react'
-import * as PropTypes from 'prop-types'
-import styled, { keyframes } from 'styled-components'
-import { colors } from '../styles'
+import * as React from "react";
+import styled, { keyframes } from "styled-components";
+import { fonts, colors } from "../styles";
+
+interface ILoaderStyleProps {
+  size: number;
+  color: string;
+  background: string;
+}
 
 const load = keyframes`
   0% {
-    transform: scale(1.0);
-  }
-  5% {
-    transform: scale(1.0);
-  }
-  50% {
-    transform: scale(0.8);
-  }
-  95% {
-    transform: scale(1.0);
+    transform: rotate(0deg);
   }
   100% {
-    transform: scale(1.0);
+    transform: rotate(360deg);
   }
-`
+`;
 
-interface ILoaderStyleProps {
-  size: number
-}
-
-interface ILoaderProps extends ILoaderStyleProps {
-  color: string
-}
-
-const SLoader = styled.svg<ILoaderStyleProps>`
+const SLoader = styled.div<ILoaderStyleProps>`
+  position: relative;
+  font-size: ${fonts.size.tiny};
+  margin: 0 auto;
+  text-indent: -9999em;
   width: ${({ size }) => `${size}px`};
   height: ${({ size }) => `${size}px`};
-  animation: ${load} 1s infinite cubic-bezier(0.25, 0, 0.75, 1);
+  border-radius: 50%;
+  background: ${({ color }) => `rgb(${colors[color]})`};
+  background: ${({ background, color }) =>
+    `linear-gradient(to right, rgb(${colors[color]}) 10%, rgba(${colors[background]}, 0) 42%)`};
+  animation: ${load} 1s infinite linear;
   transform: translateZ(0);
-`
 
-const Loader = (props: ILoaderProps) => {
-  const { size, color } = props
-  const rgb = `rgb(${colors[color]})`
-  return (
-    <SLoader viewBox="0 0 186 187" size={size}>
-      <g stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
-        <path
-          d="M60,10.34375 C32.3857625,10.34375 10,32.7295125 10,60.34375 L10,126.34375 C10,153.957987 32.3857625,176.34375 60,176.34375 L126,176.34375 C153.614237,176.34375 176,153.957987 176,126.34375 L176,60.34375 C176,32.7295125 153.614237,10.34375 126,10.34375 L60,10.34375 Z M60,0.34375 L126,0.34375 C159.137085,0.34375 186,27.206665 186,60.34375 L186,126.34375 C186,159.480835 159.137085,186.34375 126,186.34375 L60,186.34375 C26.862915,186.34375 0,159.480835 0,126.34375 L0,60.34375 C0,27.206665 26.862915,0.34375 60,0.34375 Z"
-          id="Rectangle-Copy"
-          fill={rgb}
-          fillRule="nonzero"
-        />
-        <rect
-          id="Rectangle"
-          fill={rgb}
-          x="44"
-          y="44.34375"
-          width="98"
-          height="98"
-          rx="35"
-        />
-      </g>
-    </SLoader>
-  )
-}
+  &:before {
+    width: 50%;
+    height: 50%;
+    background: ${({ color }) => `rgb(${colors[color]})`};
+    border-radius: 100% 0 0 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    content: "";
+  }
 
-Loader.propTypes = {
-  size: PropTypes.number,
-  color: PropTypes.string
-}
+  &:after {
+    background: ${({ background }) => `rgb(${colors[background]})`};
+    width: 75%;
+    height: 75%;
+    border-radius: 50%;
+    content: "";
+    margin: auto;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+  }
+`;
+
+const Loader = (props: ILoaderStyleProps) => (
+  <SLoader
+    size={props.size}
+    color={props.color}
+    background={props.background}
+    {...props}
+  />
+);
 
 Loader.defaultProps = {
   size: 40,
-  color: 'lightBlue'
-}
+  color: "darkBlue",
+  background: "white"
+};
 
-export default Loader
+export default Loader;
