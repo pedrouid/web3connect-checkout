@@ -8,7 +8,7 @@ export const colors = {
   grey90: "230, 230, 230",
   lightGrey: "234, 235, 238",
   blue: "101, 127, 230",
-  lightBlue: "82, 210, 255",
+  lightBlue: "64, 153, 255",
   darkBlue: "16, 28, 56",
   yellow: "250, 188, 45",
   yellow45: "230, 164, 0",
