@@ -163,9 +163,12 @@ class App extends React.Component<any, any> {
     console.log("[requestTransaction]"); // tslint:disable-line
     const { address, paymentRequest, chainId } = this.state;
     if (chainId !== 1) {
-      return this.displayErrorMessage("Please switch to Ethereum Mainnet");
+      return this.displayErrorMessage(
+        "Please switch to Ethereum Mainnet and refresh this page"
+      );
     }
     if (paymentRequest) {
+      s;
       this.updatePaymentStatus(PAYMENT_PENDING);
       try {
         const { currency, amount, to } = paymentRequest;
