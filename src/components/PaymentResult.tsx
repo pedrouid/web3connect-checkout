@@ -71,7 +71,7 @@ const SPaymentResult = styled.div<IPaymentResultStyleProps>`
 const PAYMENT_COPY = {
   [PAYMENT_SUCCESS]: {
     title: "Success",
-    description: `Your payment went through and you will redirected in a few seconds.`
+    description: `Your payment went through and you will redirected in a couple of seconds.`
   },
   [PAYMENT_PENDING]: {
     title: "Payment Pending",
@@ -85,62 +85,45 @@ const PAYMENT_COPY = {
 
 interface IPaymentResultProps extends IPaymentResultStyleProps {
   payment: IPayment;
+  description?: string;
 }
 
 const PaymentResult = (props: IPaymentResultProps) => {
+  let image = null;
+  let title = "";
+  let description = "";
+
   switch (props.payment.status) {
     case PAYMENT_SUCCESS:
-      return (
-        <SCheckoutColumn>
-          <SPaymentResult height={props.height}>
-            <div>
-              <img src={success} alt={PAYMENT_COPY[PAYMENT_SUCCESS].title} />
-            </div>
-          </SPaymentResult>
-          <SCheckoutCallToAction>
-            {PAYMENT_COPY[PAYMENT_SUCCESS].title}
-          </SCheckoutCallToAction>
-          <SCheckoutDescription>
-            {PAYMENT_COPY[PAYMENT_SUCCESS].description}
-          </SCheckoutDescription>
-        </SCheckoutColumn>
-      );
+      image = <img src={success} alt={PAYMENT_COPY[PAYMENT_SUCCESS].title} />;
+      title = PAYMENT_COPY[PAYMENT_SUCCESS].title;
+      description = PAYMENT_COPY[PAYMENT_SUCCESS].description;
+      break;
     case PAYMENT_PENDING:
-      return (
-        <SCheckoutColumn>
-          <SPaymentResult height={props.height}>
-            <div>
-              <Loader />
-            </div>
-          </SPaymentResult>
-          <SCheckoutCallToAction>
-            {PAYMENT_COPY[PAYMENT_PENDING].title}
-          </SCheckoutCallToAction>
-          <SCheckoutDescription>
-            {PAYMENT_COPY[PAYMENT_PENDING].description}
-          </SCheckoutDescription>
-        </SCheckoutColumn>
-      );
-
+      image = <Loader />;
+      title = PAYMENT_COPY[PAYMENT_PENDING].title;
+      description = PAYMENT_COPY[PAYMENT_PENDING].description;
+      break;
     case PAYMENT_FAILURE:
-      return (
-        <SCheckoutColumn>
-          <SPaymentResult height={props.height}>
-            <div>
-              <img src={error} alt={PAYMENT_COPY[PAYMENT_FAILURE].title} />
-            </div>
-          </SPaymentResult>
-          <SCheckoutCallToAction>
-            {PAYMENT_COPY[PAYMENT_FAILURE].title}
-          </SCheckoutCallToAction>
-          <SCheckoutDescription>
-            {PAYMENT_COPY[PAYMENT_FAILURE].description}
-          </SCheckoutDescription>
-        </SCheckoutColumn>
-      );
+      image = <img src={error} alt={PAYMENT_COPY[PAYMENT_FAILURE].title} />;
+      title = PAYMENT_COPY[PAYMENT_FAILURE].title;
+      description = PAYMENT_COPY[PAYMENT_FAILURE].description;
+      break;
     default:
-      return null;
+      break;
   }
+
+  return (
+    <SCheckoutColumn>
+      <SPaymentResult height={props.height}>
+        <div>{image}</div>
+      </SPaymentResult>
+      <SCheckoutCallToAction>{title}</SCheckoutCallToAction>
+      <SCheckoutDescription>
+        {props.description || description}
+      </SCheckoutDescription>
+    </SCheckoutColumn>
+  );
 };
 
 export default PaymentResult;

@@ -14,6 +14,12 @@ import {
 } from "./helpers/utilities";
 import { formatTransaction } from "./helpers/transaction";
 import { IPayment } from "./helpers/types";
+import { fonts } from "./styles";
+import {
+  PAYMENT_SUCCESS,
+  PAYMENT_FAILURE,
+  PAYMENT_PENDING
+} from "./constants/paymentStatus";
 
 const SLayout = styled.div`
   position: relative;
@@ -46,6 +52,12 @@ const SBalances = styled(SLanding)`
   height: 100%;
   & h3 {
     padding-top: 30px;
+  }
+`;
+
+const SPaymentRequestDescription = styled.p`
+  & span {
+    font-weight: ${fonts.weight.bold};
   }
 `;
 
@@ -139,49 +151,75 @@ class App extends React.Component<any, any> {
 
   public clearErrorMessage = () => this.setState({ errorMsg: "" });
 
-  public displayErrorMessage = (errorMsg: string) =>
+  public displayErrorMessage = (errorMsg: string) => {
+    console.log("[displayErrorMessage] errorMsg", errorMsg); // tslint:disable-line
     this.setState({ errorMsg });
+    if (this.state.connected) {
+      this.updatePaymentStatus(PAYMENT_FAILURE);
+    }
+  };
 
   public requestTransaction = async () => {
     console.log("[requestTransaction]"); // tslint:disable-line
-    const { address, paymentRequest, web3 } = this.state;
+    const { address, paymentRequest, chainId } = this.state;
+    if (chainId !== 1) {
+      return this.displayErrorMessage("Please switch to Ethereum Mainnet");
+    }
     if (paymentRequest) {
-      this.setState({
-        paymentStatus: {
-          status: "pending",
-          result: null
-        }
-      });
+      this.updatePaymentStatus(PAYMENT_PENDING);
       try {
         const { currency, amount, to } = paymentRequest;
         const from = address;
-        const tx = await formatTransaction(from, to, amount, currency);
+        const tx = await formatTransaction(from, to, amount, currency, chainId);
         console.log("[requestTransaction] tx", tx); // tslint:disable-line
-        const txHash = await web3.eth.sendTransaction(tx);
+        const txHash = await this.web3SendTransaction(tx);
         console.log("[requestTransaction] txHash", txHash); // tslint:disable-line
-        this.setState({
-          status: "success",
-          result: txHash
-        });
+        this.updatePaymentStatus(PAYMENT_SUCCESS, txHash);
+        setTimeout(
+          () => this.redirectToCallbackUrl(),
+          2000 // 2 secs
+        );
       } catch (error) {
-        this.displayErrorMessage(error.message);
-        this.setState({ status: "failure", result: null });
+        console.error(error); // tslint:disable-line
+        return this.displayErrorMessage(error.message);
       }
     } else {
-      this.displayErrorMessage("Payment request missing or invalid");
+      return this.displayErrorMessage("Payment request missing or invalid");
     }
+  };
+
+  public updatePaymentStatus = (status: string, result: any = null) =>
+    this.setState({ paymentStatus: { status, result } });
+
+  public web3SendTransaction = (tx: any) => {
+    const { web3 } = this.state;
+    return new Promise((resolve, reject) => {
+      web3.eth.sendTransaction(tx, (err: any, txHash: string) => {
+        if (err) {
+          reject(err);
+        }
+        console.log("txHash", txHash); // tslint:disable-line
+        resolve(txHash);
+      });
+    });
   };
 
   public redirectToCallbackUrl() {
     const { paymentRequest, paymentStatus } = this.state;
     if (paymentRequest && paymentStatus) {
       if (typeof window !== "undefined") {
+        // tslint:disable-next-line
+        console.log(
+          "[redirectToCallbackUrl] paymentRequest.callbackUrl",
+          paymentRequest.callbackUrl
+        );
         const url = appendToQueryString(paymentRequest.callbackUrl, {
           txHash: paymentStatus.result
         });
+        console.log("[redirectToCallbackUrl] url", url); // tslint:disable-line
         window.open(url);
       } else {
-        this.displayErrorMessage("Window is undefined");
+        return this.displayErrorMessage("Window is undefined");
       }
     }
   }
@@ -222,6 +260,7 @@ class App extends React.Component<any, any> {
       connected,
       address,
       chainId,
+      errorMsg,
       paymentRequest,
       paymentStatus
     } = this.state;
@@ -250,7 +289,11 @@ class App extends React.Component<any, any> {
               <SLanding center>
                 <h3>{`Payment Request`}</h3>
 
-                <p>{`Paying ${paymentRequest.amount} ${paymentRequest.currency}`}</p>
+                <SPaymentRequestDescription>
+                  {`Paying `}
+                  <span>{`${paymentRequest.amount} ${paymentRequest.currency}`}</span>
+                  {` to ${paymentRequest.to}`}
+                </SPaymentRequestDescription>
                 {!paymentStatus ? (
                   <Web3Connect.Button
                     label="Pay"
@@ -266,7 +309,15 @@ class App extends React.Component<any, any> {
                     onConnect={(provider: any) => this.onConnect(provider)}
                   />
                 ) : (
-                  <PaymentResult height={300} payment={paymentStatus} />
+                  <PaymentResult
+                    height={300}
+                    payment={paymentStatus}
+                    description={
+                      paymentStatus.status === PAYMENT_FAILURE && errorMsg
+                        ? errorMsg
+                        : ""
+                    }
+                  />
                 )}
               </SLanding>
             )}
