@@ -168,7 +168,6 @@ class App extends React.Component<any, any> {
       );
     }
     if (paymentRequest) {
-      s;
       this.updatePaymentStatus(PAYMENT_PENDING);
       try {
         const { currency, amount, to } = paymentRequest;
