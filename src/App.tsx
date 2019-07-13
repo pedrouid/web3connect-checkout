@@ -152,7 +152,6 @@ class App extends React.Component<any, any> {
   public clearErrorMessage = () => this.setState({ errorMsg: "" });
 
   public displayErrorMessage = (errorMsg: string) => {
-    console.log("[displayErrorMessage] errorMsg", errorMsg); // tslint:disable-line
     this.setState({ errorMsg });
     if (this.state.connected) {
       this.updatePaymentStatus(PAYMENT_FAILURE);
@@ -160,7 +159,6 @@ class App extends React.Component<any, any> {
   };
 
   public requestTransaction = async () => {
-    console.log("[requestTransaction]"); // tslint:disable-line
     const { address, paymentRequest, chainId } = this.state;
     if (chainId !== 1) {
       return this.displayErrorMessage(
@@ -173,9 +171,7 @@ class App extends React.Component<any, any> {
         const { currency, amount, to } = paymentRequest;
         const from = address;
         const tx = await formatTransaction(from, to, amount, currency, chainId);
-        console.log("[requestTransaction] tx", tx); // tslint:disable-line
         const txHash = await this.web3SendTransaction(tx);
-        console.log("[requestTransaction] txHash", txHash); // tslint:disable-line
         this.updatePaymentStatus(PAYMENT_SUCCESS, txHash);
         setTimeout(
           () => this.redirectToCallbackUrl(),
@@ -200,7 +196,6 @@ class App extends React.Component<any, any> {
         if (err) {
           reject(err);
         }
-        console.log("txHash", txHash); // tslint:disable-line
         resolve(txHash);
       });
     });
@@ -210,15 +205,10 @@ class App extends React.Component<any, any> {
     const { paymentRequest, paymentStatus } = this.state;
     if (paymentRequest && paymentStatus) {
       if (typeof window !== "undefined") {
-        // tslint:disable-next-line
-        console.log(
-          "[redirectToCallbackUrl] paymentRequest.callbackUrl",
-          paymentRequest.callbackUrl
-        );
         const url = appendToQueryString(paymentRequest.callbackUrl, {
-          txHash: paymentStatus.result
+          txhash: paymentStatus.result,
+          currency: paymentRequest.currency
         });
-        console.log("[redirectToCallbackUrl] url", url); // tslint:disable-line
         window.open(url);
       } else {
         return this.displayErrorMessage("Window is undefined");
