@@ -9,7 +9,7 @@ import Loader from "./components/Loader";
 import PaymentResult from "./components/PaymentResult";
 import {
   queryChainId,
-  appendToQueryString,
+  // appendToQueryString,
   parseQueryString
 } from "./helpers/utilities";
 import { formatTransaction } from "./helpers/transaction";
@@ -61,11 +61,18 @@ const SPaymentRequestDescription = styled.p`
   }
 `;
 
+const SDisplayTxHash = styled.a`
+  cursor: pointer;
+  font-weight: ${fonts.weight.semibold};
+  font-family: ${fonts.family.RobotoMono};
+`;
+
 interface IPaymentRequest {
   currency: string;
   amount: string;
   to: string;
-  callbackUrl: string;
+  // callbackUrl: string;
+  data: string;
 }
 
 interface IAppState {
@@ -74,7 +81,6 @@ interface IAppState {
   web3: any;
   connected: boolean;
   chainId: number;
-  networkId: number;
   paymentRequest: IPaymentRequest | null;
   paymentStatus: IPayment | null;
   errorMsg: string;
@@ -86,7 +92,6 @@ const INITIAL_STATE: IAppState = {
   web3: null,
   connected: false,
   chainId: 1,
-  networkId: 1,
   paymentRequest: null,
   paymentStatus: null,
   errorMsg: ""
@@ -94,7 +99,7 @@ const INITIAL_STATE: IAppState = {
 
 let accountInterval: any = null;
 
-function loadPaymentRequest() {
+function loadPaymentRequest(): IPaymentRequest | null {
   let result = null;
   if (typeof window !== "undefined") {
     const queryString = window.location.search;
@@ -103,20 +108,27 @@ function loadPaymentRequest() {
       if (Object.keys(queryParams).length) {
         if (!queryParams.currency) {
           console.error("No Currency Value Provided"); // tslint:disable-line
-        } else if (!queryParams.amount) {
-          console.error("No Amount Value Provided"); // tslint:disable-line
-        } else if (!queryParams.to) {
-          console.error("No Address Value Provided"); // tslint:disable-line
-        } else if (!queryParams.callbackUrl) {
-          console.error("No Callback Url Provided"); // tslint:disable-line
-        } else {
-          result = {
-            currency: queryParams.currency,
-            amount: queryParams.amount,
-            to: queryParams.to,
-            callbackUrl: decodeURIComponent(queryParams.callbackUrl)
-          };
+          return null;
         }
+        if (!queryParams.amount) {
+          console.error("No Amount Value Provided"); // tslint:disable-line
+          return null;
+        }
+        if (!queryParams.to) {
+          console.error("No Address Value Provided"); // tslint:disable-line
+          return null;
+        }
+        // if (!queryParams.callbackUrl) {
+        //   console.error("No Callback Url Provided"); // tslint:disable-line
+        //   return null;
+        // }
+        result = {
+          currency: queryParams.currency,
+          amount: queryParams.amount,
+          to: queryParams.to,
+          // callbackUrl: decodeURIComponent(queryParams.callbackUrl),
+          data: queryParams.data || ""
+        };
       }
     }
   }
@@ -143,7 +155,6 @@ class App extends React.Component<any, any> {
       connected: true,
       address: accounts[0],
       chainId
-      // networkId
     });
 
     await this.requestTransaction();
@@ -160,23 +171,35 @@ class App extends React.Component<any, any> {
 
   public requestTransaction = async () => {
     const { address, paymentRequest, chainId } = this.state;
-    if (chainId !== 1) {
-      return this.displayErrorMessage(
-        "Please switch to Ethereum Mainnet and refresh this page"
-      );
-    }
     if (paymentRequest) {
+      if (paymentRequest.currency.toLowerCase() === "eth" && chainId !== 1) {
+        return this.displayErrorMessage(
+          "Please switch to Ethereum Mainnet and refresh this page"
+        );
+      }
+      if (paymentRequest.currency.toLowerCase() === "xdai" && chainId !== 100) {
+        return this.displayErrorMessage(
+          "Please switch to xDAI and refresh this page"
+        );
+      }
       this.updatePaymentStatus(PAYMENT_PENDING);
       try {
-        const { currency, amount, to } = paymentRequest;
+        const { currency, amount, to, data } = paymentRequest;
         const from = address;
-        const tx = await formatTransaction(from, to, amount, currency, chainId);
+        const tx = await formatTransaction(
+          from,
+          to,
+          amount,
+          currency,
+          chainId,
+          data
+        );
         const txHash = await this.web3SendTransaction(tx);
         this.updatePaymentStatus(PAYMENT_SUCCESS, txHash);
-        setTimeout(
-          () => this.redirectToCallbackUrl(),
-          2000 // 2 secs
-        );
+        // setTimeout(
+        //   () => this.redirectToCallbackUrl(),
+        //   2000 // 2 secs
+        // );
       } catch (error) {
         console.error(error); // tslint:disable-line
         return this.displayErrorMessage(error.message);
@@ -201,20 +224,20 @@ class App extends React.Component<any, any> {
     });
   };
 
-  public redirectToCallbackUrl() {
-    const { paymentRequest, paymentStatus } = this.state;
-    if (paymentRequest && paymentStatus) {
-      if (typeof window !== "undefined") {
-        const url = appendToQueryString(paymentRequest.callbackUrl, {
-          txhash: paymentStatus.result,
-          currency: paymentRequest.currency
-        });
-        window.open(url);
-      } else {
-        return this.displayErrorMessage("Window is undefined");
-      }
-    }
-  }
+  // public redirectToCallbackUrl() {
+  //   const { paymentRequest, paymentStatus } = this.state;
+  //   if (paymentRequest && paymentStatus) {
+  //     if (typeof window !== "undefined") {
+  //       const url = appendToQueryString(paymentRequest.callbackUrl, {
+  //         txhash: paymentStatus.result,
+  //         currency: paymentRequest.currency
+  //       });
+  //       window.open(url);
+  //     } else {
+  //       return this.displayErrorMessage("Window is undefined");
+  //     }
+  //   }
+  // }
 
   public checkCurrentAccount = async () => {
     const { web3, address, chainId } = this.state;
@@ -244,6 +267,23 @@ class App extends React.Component<any, any> {
     }
     clearInterval(accountInterval);
     this.setState({ ...INITIAL_STATE });
+  };
+
+  public renderTxHash = () => {
+    const { paymentRequest, paymentStatus } = this.state;
+    if (paymentRequest && paymentStatus) {
+      const txHash = paymentStatus.result;
+      const url =
+        paymentRequest.currency.toLowerCase() === "xdai"
+          ? `https://blockscout.com/poa/dai/tx/${txHash}`
+          : `https://etherscan.io/tx/${txHash}`;
+      return (
+        <SDisplayTxHash href={url} target="blank" rel="noreferrer noopener">
+          {txHash}
+        </SDisplayTxHash>
+      );
+    }
+    return null;
   };
 
   public render = () => {
@@ -311,6 +351,9 @@ class App extends React.Component<any, any> {
                     }
                   />
                 )}
+                {paymentStatus &&
+                  paymentStatus.status === PAYMENT_SUCCESS &&
+                  this.renderTxHash()}
               </SLanding>
             )}
           </SContent>

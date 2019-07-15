@@ -42,7 +42,8 @@ export const fonts = {
     extrabold: 800
   },
   family: {
-    OpenSans: '"Open Sans", sans-serif'
+    OpenSans: '"Open Sans", sans-serif',
+    RobotoMono: '"Roboto Mono", monospace'
   }
 };
 
@@ -88,7 +89,7 @@ export const responsive = {
 };
 
 export const globalStyle = `
-  @import url('https://fonts.googleapis.com/css?family=Open+Sans:400,500,600,700,800');
+  @import url('https://fonts.googleapis.com/css?family=Open+Sans:400,600,700,800|Roboto+Mono:400,500,700&display=swap');
 
   html, body, #root {
     height: 100%;

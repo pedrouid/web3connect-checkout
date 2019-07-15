@@ -46,7 +46,8 @@ export async function formatTransaction(
   to: string,
   amount: string,
   symbol: string,
-  chainId: number
+  chainId: number,
+  customData: string
 ) {
   const supportedTokens = getSupportedTokens(chainId);
   const asset = getAsset(symbol, chainId);
@@ -72,8 +73,8 @@ export async function formatTransaction(
 
   if (!isToken(asset)) {
     value = amount;
-    data = "0x";
-    gasLimit = 21000;
+    data = customData || "0x";
+    gasLimit = !customData ? 21000 : 40000;
     const gasTotal = multiply(gasPrice, gasLimit);
     const total = add(amount, gasTotal);
 

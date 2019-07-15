@@ -71,7 +71,7 @@ const SPaymentResult = styled.div<IPaymentResultStyleProps>`
 const PAYMENT_COPY = {
   [PAYMENT_SUCCESS]: {
     title: "Success",
-    description: `Your payment went through and you will redirected in a couple of seconds.`
+    description: `Your payment was sucessful and you can verify the transaction hash below.`
   },
   [PAYMENT_PENDING]: {
     title: "Payment Pending",
